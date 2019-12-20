@@ -198,7 +198,7 @@ func init() {
 // NewGaiaApp returns a reference to an initialized Gaia.
 func NewGaiaApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	homePath string, invCheckPeriod uint, encodingConfig gaiaappparams.EncodingConfig, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
+	homePath string, invCheckPeriod uint, encodingConfig gaiaappparams.EncodingConfig, distHooks distrtypes.DistributionHooks, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *GaiaApp {
 
 	appCodec := encodingConfig.Marshaler
@@ -264,6 +264,8 @@ func NewGaiaApp(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
+
+	app.DistrKeeper.SetHooks(distHooks)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
