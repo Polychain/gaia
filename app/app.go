@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -109,7 +110,7 @@ type GaiaApp struct {
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
 func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
-	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
+	invCheckPeriod uint, distHooks distrTypes.DistributionHooks, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 
 	cdc := MakeCodec()
 
@@ -169,6 +170,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		app.supplyKeeper, &stakingKeeper, gov.DefaultCodespace, govRouter,
 	)
 
+	app.distrKeeper.SetHooks(distHooks)
+
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.stakingKeeper = *stakingKeeper.SetHooks(
@@ -227,6 +230,10 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	}
 
 	return app
+}
+
+func (app *GaiaApp) GetStakingKeeper() *staking.Keeper {
+	return &app.stakingKeeper
 }
 
 // application updates every begin block
